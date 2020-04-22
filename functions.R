@@ -7,7 +7,7 @@ temperature_palette <- c(
 )
 
 count_pixels <- function(img) {
-  img$select("LST_Day_1km")$multiply(0)$add(1)
+  img$select("LST_Day_1km")$multiply(0)$add(1)$unmask(0)
 }
 
 mod11A2_clean <- function(img) {
@@ -19,12 +19,12 @@ mod11A2_clean <- function(img) {
   # quality band
   lst_qa <- img$select("QC_Day")
   # qa mask
-  quality_flag <- getQABits(lst_qa, 2, 2, "quality")$eq(0)
-  emissivityerror_mask <- getQABits(lst_qa, 4, 4, "emissivity_error")$eq(1)
-  LSTerror_mask <- getQABits(lst_qa, 6, 6, "lst_error")$eq(1)
+  #quality_flag <- getQABits(lst_qa, 2, 3, "quality")$lte(0)
+  emissivityerror_mask <- getQABits(lst_qa, 4, 5, "emissivity_error")$lte(1)
+  LSTerror_mask <- getQABits(lst_qa, 6, 7, "lst_error")$lte(1)
 
   # Both flags should be set to zero, indicating clear conditions.
-  mask <- emissivityerror_mask$Or(LSTerror_mask)
+  mask <- emissivityerror_mask$Or(LSTerror_mask)#$Or(quality_flag)
   lst_value_celsius$updateMask(mask)
 }
 
@@ -36,7 +36,8 @@ getQABits = function(image, start, end, newName) {
   }
   # Return a single band image of the extracted QA bits, giving the band
   # a new name.
-  image$rename(newName)$
+  image$
     bitwiseAnd(pattern)$
     rightShift(start)
 }
+

@@ -13,8 +13,8 @@ ee_Initialize()
 # Read dataset
 mod11a2 <- ee$ImageCollection("MODIS/006/MOD11A2")$
   filter(ee$Filter$date('2001-01-01', '2019-12-31'))$
-  filter(ee$Filter$calendarRange(7,field = "month"))
-
+  filter(ee$Filter$calendarRange(1,field = "month"))
+nimg <- mod11a2$size()$getInfo()
 # Raw Temperature MODIS LST day 1km
 mod11a2_raw <- mod11a2
 mod11a2_raw_npixels <- mod11a2_raw$map(count_pixels)$sum()
@@ -26,10 +26,12 @@ mod11a2_composite_raw <- mod11a2$mean()$
 # QA quality Temperature MODIS LST day 1km
 mod11a2_clean <- mod11a2$map(mod11A2_clean)
 mod11a2_clean_npixels <- mod11a2_clean$map(count_pixels)$sum()
-mod11a2_composite_clean <- mod11a2_clean$median()
+
+# at least 10% of pixels
+mask <- mod11a2_clean_npixels$gte(round(nimg*0.10))
+mod11a2_composite_clean <- mod11a2_clean$mean()$updateMask(mask)
 
 # GeoVIZ
-nimg <- mod11a2_raw$size()$getInfo()
 lst_viz <- list(min = 15 , max = 30, palette = temperature_palette)
 npixel_viz <- list(min = 0 , max = nimg, palette = temperature_palette)
 
